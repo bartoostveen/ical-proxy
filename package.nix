@@ -3,6 +3,7 @@
   version,
   buildGradleApplication,
   jdk,
+  ...
 }:
 
 buildGradleApplication {

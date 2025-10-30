@@ -40,6 +40,9 @@
             allowUnfree = true;
             overlays = [
               inputs.build-gradle-application.overlays.default
+              (_prev: _final: {
+                runCommandNoCC = pkgs.runCommand; # TODO: open pr upstream
+              })
             ];
           };
           version = self.shortRev or "dirty";
