@@ -40,12 +40,20 @@
             allowUnfree = true;
             overlays = [
               inputs.build-gradle-application.overlays.default
-              (_prev: _final: {
-                runCommandNoCC = pkgs.runCommand; # TODO: open pr upstream
-              })
+              (
+                _final: prev: with prev; {
+                  jdk = openjdk25;
+                  python = python314;
+                  gradle = gradle_9;
+                }
+              )
             ];
           };
           version = self.shortRev or "dirty";
+          env = {
+            JAVA_HOME = "${pkgs.jdk}";
+            GRADLE_JAVA_HOME = "${pkgs.jdk}";
+          };
         in
         {
           _module.args.pkgs = pkgs;
@@ -60,13 +68,11 @@
             packages = with pkgs; [
               gradle
               jdk
-              python313
+              python
               updateVerificationMetadata
             ];
 
-            env = {
-              GRADLE_JAVA_HOME = "${pkgs.jdk}";
-            };
+            inherit env;
 
             shellHook = ''
               echo
@@ -84,8 +90,7 @@
                 inherit (pkgs) jdk;
               }).overrideAttrs
                 {
-                  env.JAVA_HOME = "${pkgs.jdk}";
-                  env.GRADLE_JAVA_HOME = "${pkgs.jdk}";
+                  inherit env;
                 };
           };
         };
