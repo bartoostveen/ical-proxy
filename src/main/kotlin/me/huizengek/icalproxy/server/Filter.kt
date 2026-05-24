@@ -2,9 +2,9 @@ package me.huizengek.icalproxy.server
 
 import biweekly.component.VEvent
 import io.ktor.http.parseUrlEncodedParameters
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import java.util.*
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 private typealias Parser<T> = (String) -> T
 
@@ -76,7 +76,8 @@ val filters =
     Filter(
       name = "organizerContains",
       parse = string,
-      predicate = { organizer?.email?.contains(it) == true
+      predicate = {
+        organizer?.email?.contains(it) == true
       }
     ),
     Filter(

@@ -3,9 +3,9 @@ package me.huizengek.icalproxy.server
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.routing.RoutingContext
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toJavaInstant
 import java.util.*
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 fun RoutingContext.nullableQueryParameter(parameter: String) =
   call.queryParameters[parameter]?.trim()?.takeIf { it.isNotEmpty() }
