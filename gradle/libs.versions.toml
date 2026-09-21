@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.4.20"
-ktor = "3.5.2"
+ktor = "3.6.0"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
