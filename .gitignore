@@ -1,7 +1,4 @@
 /.envrc
-.gradle
-build
 /.direnv
 /result
-/.idea
-/.kotlin
+/target
