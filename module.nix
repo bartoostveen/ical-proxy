@@ -68,7 +68,7 @@ in
 
       environment = {
         ICAL_PROXY_CONFIG = cfg.configFile;
-        RUST_LOG = mkDefault "info,tower_http=debug";
+        RUST_LOG = mkDefault "info";
       }
       // cfg.environment;
 
