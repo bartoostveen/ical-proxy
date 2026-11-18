@@ -1,6 +1,6 @@
 # `ical-proxy`
 
-This is just a one-day hobby project of mine. Take a look if you want, or not. It was written in something like an hour or so, so this is probably not the best code you have ever seen.
+This is just a one-day hobby project of mine. Take a look if you want, or not.
 
 # License
 
