@@ -1,6 +1,6 @@
 {
-  lib,
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -8,23 +8,12 @@
 let
   inherit (lib)
     # keep-sorted start
-    boolToString
-    collect
-    concatStringsSep
     getExe
-    isBool
-    isList
-    isString
-    listToAttrs
-    mapAttrsRecursive
     mkDefault
     mkEnableOption
     mkIf
     mkOption
     mkPackageOption
-    optionalAttrs
-    pipe
-    toUpper
     types
     # keep-sorted end
     ;
@@ -32,112 +21,60 @@ let
   inherit (types)
     # keep-sorted start
     attrs
-    attrsOf
     nullOr
     path
-    port
-    str
-    submodule
     # keep-sorted end
     ;
 
-  cfg = config.services.ta-schedule;
-
-  environment =
-    (pipe cfg.settings [
-      (mapAttrsRecursive (
-        path: value:
-        optionalAttrs (value != null) {
-          name = "TA_SCHEDULE_${toUpper (concatStringsSep "_" path)}";
-          value =
-            if isList value then
-              concatStringsSep "," value
-            else if isBool value then
-              boolToString value
-            else
-              toString value;
-        }
-      ))
-      (collect (x: isString x.name or false && isString x.value or false))
-      listToAttrs
-    ])
-    // cfg.environment;
+  cfg = config.services.ical-proxy;
+  toml = pkgs.formats.toml { };
 in
 {
-  options.services.ta-schedule = {
-    enable = mkEnableOption "ta-schedule";
-    package = mkPackageOption pkgs "ta-schedule" { };
-    inputFile = mkOption {
-      description = "Input file name of server";
+  options.services.ical-proxy = {
+    enable = mkEnableOption "ical-proxy";
+    package = mkPackageOption pkgs "ical-proxy" { };
+    settings = mkOption {
+      description = "Configuration written to the service's TOML config file";
+      inherit (toml) type;
+      default = { };
+      example = {
+        port = 8080;
+        redis_url = "redis://127.0.0.1:6379";
+      };
+    };
+    configFile = mkOption {
+      description = "Path to an existing TOML configuration file; takes precedence over settings";
       type = path;
-      example = "/path/to/schedule.xlsx";
-    };
-    scheduleSheetName = mkOption {
-      description = "Name of input schedule sheet";
-      type = str;
-      default = "Room Allocation";
-    };
-    exchangeSheetName = mkOption {
-      description = "Name of input exchange sheet";
-      type = str;
-      default = "Session Exchange";
+      default = toml.generate "ical-proxy.toml" cfg.settings;
+      example = "/etc/ical-proxy/config.toml";
     };
     environment = mkOption {
-      description = "Additional environment vars to set";
+      description = "Additional environment variables to set";
       type = attrs;
       default = { };
     };
-    settings = mkOption {
-      description = "Settings (env vars) for ta-schedule";
-      type = submodule {
-        freeformType = attrsOf str;
-        options = {
-          listen = mkOption {
-            description = "Listen address";
-            type = str;
-            default = "0.0.0.0";
-            example = "127.0.0.1";
-          };
-          base_url = mkOption {
-            description = "Base URL that the app is served from, seen from the outside";
-            type = str;
-            default = "http://localhost:8000";
-            example = "https://ta.bartoostveen.nl";
-          };
-          port = mkOption {
-            description = "Port";
-            type = port;
-            default = 8000;
-            example = 12345;
-          };
-        };
-      };
-      default = { };
-    };
     environmentFile = mkOption {
-      description = "path to the environment file containing variables such as the private key";
+      description = "Path to an environment file with additional variables";
       type = nullOr path;
       default = null;
-      example = "/run/path/to/secret/environment/file.env";
+      example = "/run/secrets/ical-proxy.env";
     };
   };
 
   config = mkIf cfg.enable {
-    services.ta-schedule.environment = {
-      RUST_LOG = mkDefault "info,tower_http=debug";
-    };
-    systemd.services.ta-schedule = {
-      description = "ta-schedule";
+    systemd.services.ical-proxy = {
+      description = "ical-proxy";
       wantedBy = [ "multi-user.target" ];
-      inherit environment;
+
+      environment = {
+        ICAL_PROXY_CONFIG = cfg.configFile;
+        RUST_LOG = mkDefault "info,tower_http=debug";
+      }
+      // cfg.environment;
+
       serviceConfig = {
         Type = "simple";
-        ExecStart = ''
-          ${getExe cfg.package} -S \
-            --file "${cfg.inputFile}" \
-            --schedule-sheet-name "${cfg.scheduleSheetName}" \
-            --exchange-sheet-name "${cfg.exchangeSheetName}"
-        '';
+        ExecStart = getExe cfg.package;
         EnvironmentFile = cfg.environmentFile;
         DynamicUser = true;
         Restart = "on-failure";

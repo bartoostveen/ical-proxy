@@ -18,7 +18,11 @@
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [ "x86_64-linux" ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
 
       imports = [
         inputs.treefmt-nix.flakeModule
@@ -87,8 +91,6 @@
                 ./Cargo.toml
                 ./Cargo.lock
                 (craneLib.fileset.commonCargoSources ./.)
-                ./static
-                ./templates
               ];
             };
 
